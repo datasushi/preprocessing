@@ -2,14 +2,14 @@ package main
 
 import (
 	"os"
-    "strings"
+	"strings"
 
-    "io/ioutil"
-    "path/filepath"
+	"io/ioutil"
+	"path/filepath"
 
 	"github.com/schollz/progressbar/v3"
-    "gopkg.in/gographics/imagick.v3/imagick"
-    "go.uber.org/zap"
+	"gopkg.in/gographics/imagick.v3/imagick"
+	"go.uber.org/zap"
 )
 
 var logger *zap.SugaredLogger
@@ -22,53 +22,53 @@ func main() {
 
 	var fileCount int64 = 0
 		
-    for _, item := range items {
-        if !item.IsDir() {
-        	var extension = filepath.Ext(item.Name())
-        	if extension == ".pdf" {
-        		fileCount++
-        	}
-        }
-    }
+	for _, item := range items {
+		if !item.IsDir() {
+			var extension = filepath.Ext(item.Name())
+			if extension == ".pdf" {
+				fileCount++
+			}
+		}
+	}
 
 	bar := progressbar.Default(fileCount)
 	
-    for _, item := range items {
-        if !item.IsDir() {
-        	var extension = filepath.Ext(item.Name())
-        	if extension == ".pdf" {
+	for _, item := range items {
+		if !item.IsDir() {
+			var extension = filepath.Ext(item.Name())
+			if extension == ".pdf" {
 //				logger.Debug("File found",
 //					zap.String("Filename :", item.Name()),
 //					zap.String("Extension :", extension),
 //				)
 				ConvertPdfToJpg(item.Name())
 				bar.Add(1)
-        	}
-        }
-    }
+			}
+		}
+	}
 }
 
 func ConvertPdfToJpg(pdfName string) {
 	fileName := strings.Split(pdfName, ".")[0]
-    imagick.Initialize()
-    defer imagick.Terminate()
-    mw := imagick.NewMagickWand()
-    defer mw.Destroy()
-    if err := mw.SetResolution(300, 300); err != nil {
-        logger.Error(err)
-    }
-    if err := mw.ReadImage(pdfName); err != nil {
-        logger.Error(err)
-    }
-    if err := mw.SetCompressionQuality(95); err != nil {
-        logger.Error(err)
-    }
-    mw.SetIteratorIndex(0)
-    if err := mw.SetFormat("jpg"); err != nil {
-        logger.Error(err)
-    }
+	imagick.Initialize()
+	defer imagick.Terminate()
+	mw := imagick.NewMagickWand()
+	defer mw.Destroy()
+	if err := mw.SetResolution(300, 300); err != nil {
+		logger.Error(err)
+	}
+	if err := mw.ReadImage(pdfName); err != nil {
+		logger.Error(err)
+	}
+	if err := mw.SetCompressionQuality(95); err != nil {
+		logger.Error(err)
+	}
+	mw.SetIteratorIndex(0)
+	if err := mw.SetFormat("jpg"); err != nil {
+		logger.Error(err)
+	}
    if err := mw.WriteImage(fileName + ".jpg"); err != nil {
-       logger.Error(err)
+	   logger.Error(err)
    }
 	_, err := imagick.ConvertImageCommand([]string{
 		"convert", fileName + ".jpg", "-colorspace", "gray", "-threshold", "90%", "-negate", fileName + "_n.jpg",
